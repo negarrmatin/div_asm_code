@@ -55,15 +55,19 @@ static void MX_DFSDM1_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 // You will need to determine the types of the two parameters
-void swap_pointers();
+void swap_pointers(int** ptr1, int** ptr2);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 // You will need to determine the types of the two parameters
-void swap_pointers()
+void swap_pointers(int** ptr1, int** ptr2)
 {
   // Implement the function body here
+    int *temp = *ptr1;
+    *ptr1 = *ptr2;
+    *ptr2 = temp;
+
 }
 /* USER CODE END 0 */
 
@@ -76,6 +80,8 @@ int main(void)
   /* USER CODE BEGIN 1 */
   int a = 1234;
   int b = 5678;
+  int* pa =&a;
+  int* pb =&b;
 
   /* USER CODE END 1 */
 
@@ -111,14 +117,17 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     // Change the print to display the pointer addresses using %p
-    printf("Before swap: a=%d, b=%d\r\n", a, b);
-
+    printf("Before swap: a=%p, b=%p\r\n", *pa, *pb);
+    printf("\n");
+    //HAL_Delay(1000);
     // modify with the appropriate arguments:
-    swap_pointers();
+    swap_pointers(&pa, &pb);
+    //swap_pointers(a, b);
 
     // Change the print to display the pointer addresses using %p
-    printf("After swap:  a=%d, b=%d\r\n", a, b);
-    HAL_Delay(500);
+    printf("After swap:  a=%p, b=%p\r\n", *pa, *pb);
+    printf("\n");
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
