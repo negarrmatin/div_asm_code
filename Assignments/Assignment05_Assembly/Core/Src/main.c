@@ -70,8 +70,11 @@ static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 /* USER CODE BEGIN PFP */
 uint32_t sqrAsm(int val);
-
+uint32_t div_asm(int val);
 int fah_to_cel_asm(int temperature);
+int swap_chars_asm(char *ptr1, char *ptr2);
+void swap_pointers(int **ptr1, int **ptr2);
+
 
 /* USER CODE END PFP */
 
@@ -79,8 +82,13 @@ int fah_to_cel_asm(int temperature);
 /* USER CODE BEGIN 0 */
 
 // Change [My name] to your name      //
-const uint8_t myTxData[] = "EMBSYS310: UW Test Application - [My Name]'s STM32L475 IoT node is alive!!!\r\n";
+const uint8_t myTxData[] = "EMBSYS310: UW Test Application - [negar matin]'s STM32L475 IoT node is alive!!!\r\n";
 const char* myCstr = "\nHello from assembly! ";
+ char* myCstr_2 = "\n X divided by 2 equles : x/2 =  ";
+const char* before_str = "\n befor  swapping : ";
+const char* after_str = "\n after swapping : ";
+//char* X_str = "\n x =  ";
+const char* X_str = "\n x =  ";
 const uint8_t endOfProgram[] = "\n******** THE END ******** \r\n";
 
 int fah_to_cel_asm(int temperature)
@@ -101,6 +109,98 @@ int fah_to_cel_asm(int temperature)
 
   return temperature;
 }
+
+int swap_chars_asm(char *ptr1, char *ptr2) {
+  int result = 0;
+  PrintString("before swapping variables : ");
+  Print_uint32(*ptr1);
+  PrintString("  ");
+  Print_uint32(*ptr2);
+  PrintString("\n");
+  PrintString("***********************\n");
+
+    asm (
+
+        "LDR r0, [%2]\n\t"     // Load the value from ptr1 into r0
+        "LDR r1, [%1]\n\t"     // Load the value from ptr2 into r1
+        "STR r1, [%2]\n\t"     // Store the value of r1 into ptr1 (swapping)
+        "STR r0, [%1]\n\t"     // Store the value of r0 into ptr2 (swapping)
+        "CMP r0, r1\n\t"          // Compare r0 and r1
+        "BEQ zero\n\t"
+        "MOV r3,1\n\t"
+        "B  end\n\t"
+        "zero:\n\t"
+        "MOV r3,0\n\t"
+        "end:\n\t"
+        "STR r3,[%0]\n\t"
+        //"ITE NE\n\t"      // If equal
+        //"MOVNE %0, #1\n\t"        // Move 1 to result
+        //"IT EQ\n\t"               // If equal
+        //"MOVEQ %0, #0\n\t"        // Move 0 to result
+        : "=r" (result)  //// Output: result variable
+        : "r" (ptr1), "r" (ptr2)// Input variables
+        : "r0", "r1", "memory"  // Registers used and memory changed
+       //: "r0", "r1", "cc", "memory" // Clobbered registers, flags, and memory
+
+    );
+    PrintString("after swapping  variables : ");
+    Print_uint32(*ptr1);
+    PrintString("  ");
+    Print_uint32(*ptr2);
+    PrintString("\n");
+    PrintString("***********************\n");
+    return result;
+
+}
+
+void swap_pointers(int **ptr1, int **ptr2) {
+
+    PrintString("before swapping pointers : ");
+    Print_uint32(*ptr1);
+    PrintString("\n");
+    Print_uint32(*ptr2);
+    PrintString("\n");
+    PrintHex(&ptr1);
+    PrintString("  ");
+    PrintHex(&ptr2);
+    PrintString("\n");
+    PrintString("***********************\n");
+    asm volatile(
+       //push {r0, r1}\n\t"    // Save r0 and r1 on the stack
+
+       /*ldr r0, %[p1]\n\t"    // Load address of ptr1 into r0
+        "ldr r1, %[p2]\n\t"    // Load address of ptr2 into r1
+
+        "ldr r2, [r0]\n\t"     // Load value at ptr1 (address of ptr1) into r2
+        "ldr r3, [r1]\n\t"     // Load value at ptr2 (address of ptr2) into r3
+
+        "str r3, [r0]\n\t"     // Store value from r3 (address of ptr2) in ptr1
+        "str r2, [r1]\n\t"     // Store value from r2 (address of ptr1) in ptr2
+
+       //pop {r0, r1}\n\t"     // Restore r0 and r1 from the stack
+        :
+        : [p1] "m" (ptr1), [p2] "m" (ptr2)
+        : "r2", "r3" */
+        "ldr r0, [%[p1]]\n\t"   // Load value at ptr1 into r0
+        "ldr r1, [%[p2]]\n\t"   // Load value at ptr2 into r1
+        "str r1, [%[p1]]\n\t"   // Store value from r1 in ptr1
+        "str r0, [%[p2]]\n\t"   // Store value from r0 in ptr2
+        :
+        : [p1] "r" (ptr1), [p2] "r" (ptr2)
+        : "r0", "r1", "memory"
+    );
+    PrintString("after swapping  pointers : ");
+    Print_uint32(*ptr1);
+    PrintString("\n");
+    Print_uint32(*ptr2);
+    PrintString("\n");
+    PrintHex(&ptr1);
+    PrintString("  ");
+    PrintHex(&ptr2);
+    PrintString("\n");
+    PrintString("***********************\n");
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -110,6 +210,7 @@ int fah_to_cel_asm(int temperature)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
 
   /* USER CODE END 1 */
 
@@ -143,6 +244,17 @@ int main(void)
 
   uint8_t counter = 10;
   uint8_t sqrResult;
+  uint8_t divResult;
+  int swapResult;
+  int  swapVar_1 = 55;
+  int  swapVar_2 = 33;
+  char* s1 = (char *)&swapVar_1;
+  char* s2 = (char *)&swapVar_2;
+  int pVar2 = 25;
+  int pVar1 = 35;
+  int* p1 = &pVar1;
+  int* p2 = &pVar2;
+
 
   HAL_UART_Transmit(&huart1, myTxData, sizeof(myTxData), 10);
 
@@ -155,24 +267,37 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-    PrintString("\nx = ");
-    Print_uint32(counter);
+    //PrintString("\nx = ");
+   /* Print_uint32(counter);
 
     sqrResult = sqrAsm(counter);
     PrintString(" x^2 = ");
     Print_uint32(sqrResult);
-    PrintString("\n");
+    PrintString("\n");*/
+    
+    div_asm(counter);
+
+
     counter--;
+    //PrintByte(counter);
+
+    /*swapResult = swap_chars_asm(s1 ,s2);
+    PrintString("\n");
+    PrintString("status of swapping  variables is : ");
+    Print_uint32(swapResult);
+    PrintString("\n");*/
+    //swap_pointers(&pVar2,&pVar1);
+    HAL_Delay(500);
+
 
     HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
 
-    HAL_Delay(500);
+   HAL_Delay(500);
   }
 
   // Testing fah_to_cel_asm
-  int tempC;
+ /*int tempC;
   PrintString("\n********** Fahrenheit to Celsius **********\n");
 
   for (uint32_t tempF = 0; tempF <= 100; tempF++) {
@@ -180,7 +305,7 @@ int main(void)
     RETAILMSG(1, ("\t%ld Fahrenheit = %d Celsius\r\n", tempF, tempC));
   }
 
-  HAL_UART_Transmit(&huart1, endOfProgram, sizeof(endOfProgram), 10);
+  HAL_UART_Transmit(&huart1, endOfProgram, sizeof(endOfProgram), 10);*/
 
   /* USER CODE END 3 */
 }
