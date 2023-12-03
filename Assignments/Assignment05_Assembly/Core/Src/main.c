@@ -85,8 +85,8 @@ void swap_pointers(int **ptr1, int **ptr2);
 const uint8_t myTxData[] = "EMBSYS310: UW Test Application - [negar matin]'s STM32L475 IoT node is alive!!!\r\n";
 const char* myCstr = "\nHello from assembly! ";
  char* myCstr_2 = "\n X divided by 2 equles : x/2 =  ";
-const char* before_str = "\n befor  swapping : ";
-const char* after_str = "\n after swapping : ";
+const char  before_str[25] = "\n befor  swapping : ";
+const char after_str[25] = "\n after swapping : ";
 //char* X_str = "\n x =  ";
 const char* X_str = "\n x =  ";
 const uint8_t endOfProgram[] = "\n******** THE END ******** \r\n";
@@ -112,15 +112,18 @@ int fah_to_cel_asm(int temperature)
 
 int swap_chars_asm(char *ptr1, char *ptr2) {
   int result = 0;
-  PrintString("before swapping variables : ");
+  /*PrintString("before swapping variables : ");
   Print_uint32(*ptr1);
   PrintString("  ");
   Print_uint32(*ptr2);
   PrintString("\n");
-  PrintString("***********************\n");
+  PrintString("***********************\n");*/
 
     asm (
-
+        //"ldr r3, [r7, #0]\n"
+        //"bl Print_uint32\n"
+        "ldr r0, =before_str\n\t"
+        "bl PrintString\n"
         "LDR r0, [%2]\n\t"     // Load the value from ptr1 into r0
         "LDR r1, [%1]\n\t"     // Load the value from ptr2 into r1
         "STR r1, [%2]\n\t"     // Store the value of r1 into ptr1 (swapping)
@@ -143,22 +146,22 @@ int swap_chars_asm(char *ptr1, char *ptr2) {
        //: "r0", "r1", "cc", "memory" // Clobbered registers, flags, and memory
 
     );
-    PrintString("after swapping  variables : ");
+    /*PrintString("after swapping  variables : ");
     Print_uint32(*ptr1);
     PrintString("  ");
     Print_uint32(*ptr2);
     PrintString("\n");
-    PrintString("***********************\n");
+    PrintString("***********************\n");*/
     return result;
 
 }
 
 void swap_pointers(int **ptr1, int **ptr2) {
 
-    PrintString("before swapping pointers : ");
-    Print_uint32(*ptr1);
+    PrintString("before swapping pointers : \n");
+    PrintHex(*ptr1);
     PrintString("\n");
-    Print_uint32(*ptr2);
+    PrintHex(*ptr2);
     PrintString("\n");
     PrintHex(&ptr1);
     PrintString("  ");
@@ -181,18 +184,18 @@ void swap_pointers(int **ptr1, int **ptr2) {
         :
         : [p1] "m" (ptr1), [p2] "m" (ptr2)
         : "r2", "r3" */
-        "ldr r0, [%[p1]]\n\t"   // Load value at ptr1 into r0
-        "ldr r1, [%[p2]]\n\t"   // Load value at ptr2 into r1
-        "str r1, [%[p1]]\n\t"   // Store value from r1 in ptr1
-        "str r0, [%[p2]]\n\t"   // Store value from r0 in ptr2
+        "ldr r0, [%0]\n\t"   // Load value at ptr1 into r0
+        "ldr r1, [%1]\n\t"   // Load value at ptr2 into r1
+        "str r1, [%0]\n\t"   // Store value from r1 in ptr1
+        "str r0, [%1]\n\t"   // Store value from r0 in ptr2
         :
-        : [p1] "r" (ptr1), [p2] "r" (ptr2)
+        : "r" (ptr1), "r" (ptr2)
         : "r0", "r1", "memory"
     );
-    PrintString("after swapping  pointers : ");
-    Print_uint32(*ptr1);
+    PrintString("after swapping  pointers : \n");
+    PrintHex(*ptr1);
     PrintString("\n");
-    Print_uint32(*ptr2);
+    PrintHex(*ptr2);
     PrintString("\n");
     PrintHex(&ptr1);
     PrintString("  ");
@@ -243,6 +246,7 @@ int main(void)
   HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 
   uint8_t counter = 10;
+  uint32_t test = 1000;
   uint8_t sqrResult;
   uint8_t divResult;
   int swapResult;
@@ -275,8 +279,7 @@ int main(void)
     Print_uint32(sqrResult);
     PrintString("\n");*/
     
-    div_asm(counter);
-
+    //div_asm(counter);
 
     counter--;
     //PrintByte(counter);
@@ -286,7 +289,7 @@ int main(void)
     PrintString("status of swapping  variables is : ");
     Print_uint32(swapResult);
     PrintString("\n");*/
-    //swap_pointers(&pVar2,&pVar1);
+    swap_pointers(&p1,&p2);
     HAL_Delay(500);
 
 
